@@ -11,6 +11,22 @@ public abstract class AbstractSource implements TransformOutputBufferInterface, 
 
     private int bufferSize[] = new int[]{};
 
+    TransformType transformType;
+
+    String transformName;
+
+    int transformID;
+
+    @Override
+    public TransformType transformType(TransformType type) {
+        return this.transformType = type;
+    }
+
+    @Override
+    public TransformType transformType() {
+        return this.transformType;
+    }
+
     @Override
     public void addTransformProperty(String pKey, String pValue) {
         transformProperties.putIfAbsent(pKey, pValue);
@@ -20,6 +36,37 @@ public abstract class AbstractSource implements TransformOutputBufferInterface, 
     public ConcurrentHashMap<String, String> getTransformProperties() {
 
         return transformProperties;
+    }
+
+    @Override
+    public String setTransformName(String name) {
+        return this.transformName = name;
+    }
+
+    @Override
+    public String getTransformName() {
+        return this.transformName;
+    }
+
+    @Override
+    public int setTransformID(int ID) {
+        this.transformID = ID;
+        return this.transformID;
+    }
+
+    @Override
+    public int getTransformID() {
+        return transformID;
+    }
+
+    @Override
+    public boolean equals(TransformInterface tInterface) {
+        return this.transformName.equals(tInterface.getTransformName());
+    }
+
+    @Override
+    public int hashCode() { // revisit
+        return this.transformName.hashCode();
     }
 
     @Override
@@ -84,4 +131,6 @@ public abstract class AbstractSource implements TransformOutputBufferInterface, 
     public int[] getOutputBufferList() {
         return bufferSize;
     }
+
+
 }

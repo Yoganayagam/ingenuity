@@ -1,16 +1,29 @@
 package com.ingenuity.flow.transform;
 
+import com.ingenuity.transform.AbstractTransform;
+import com.ingenuity.transform.AbstractTransformLink;
 import com.ingenuity.transform.TransformInterface;
+import com.ingenuity.transform.TransformLinkInterface;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public interface TransformGraphInterface {
 
-    public TransformInterface addTransform(List<TransformInterface> sourceTransforms);
-    public TransformInterface addTransform(List<TransformInterface> sourceTransforms, List<TransformInterface> targetTransform);
+    public String setTransformGraphName(String name);
 
-    public void connectTransform(TransformInterface sourceTransform, TransformInterface targetTransform);
+    public String getTransformGraphName();
 
+    public int setTransformGraphID(int ID);
 
+    public int getTransformID();
+    public AbstractTransform addTransform(AbstractTransform transform);
+
+    public AbstractTransform updateTransform(AbstractTransform oldtransform, AbstractTransform transform);
+    public AbstractTransform removeTransform(AbstractTransform transform);
+    public AbstractTransformLink connectTransform(AbstractTransform sourceTransform, AbstractTransform targetTransform);
+    public AbstractTransformLink removeLink(AbstractTransform sourceTransform, AbstractTransform targetTransform);
+    public void addTransformGraphProperty(String pKey, String pValue);
+    public ConcurrentHashMap<String, String> getTransformGraphProperties();
 
 }

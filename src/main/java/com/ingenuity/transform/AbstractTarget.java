@@ -11,6 +11,12 @@ public abstract class AbstractTarget implements TransformInputBufferInterface, T
 
     private int bufferSize[] = new int[]{};
 
+    TransformType transformType;
+
+    String transformName;
+
+    int transformID;
+
     @Override
     public void addTransformProperty(String pKey, String pValue) {
         transformProperties.putIfAbsent(pKey, pValue);
@@ -75,5 +81,47 @@ public abstract class AbstractTarget implements TransformInputBufferInterface, T
     @Override
     public int[] getInputBufferList() {
         return bufferSize;
+    }
+
+
+    @Override
+    public String setTransformName(String name) {
+        return this.transformName = name;
+    }
+
+    @Override
+    public String getTransformName() {
+        return this.transformName;
+    }
+
+    @Override
+    public int setTransformID(int ID) {
+        this.transformID = ID;
+        return this.transformID;
+    }
+
+    @Override
+    public int getTransformID() {
+        return transformID;
+    }
+
+    @Override
+    public boolean equals(TransformInterface tInterface) {
+        return this.transformName.equals(tInterface.getTransformName());
+    }
+
+    @Override
+    public int hashCode() { // revisit
+        return this.transformName.hashCode();
+    }
+
+    @Override
+    public TransformType transformType(TransformType type) {
+        return this.transformType = type;
+    }
+
+    @Override
+    public TransformType transformType() {
+        return this.transformType;
     }
 }
