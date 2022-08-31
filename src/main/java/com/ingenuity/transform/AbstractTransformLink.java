@@ -35,4 +35,9 @@ public abstract class AbstractTransformLink implements TransformLinkInterface{
     public boolean equals(TransformLinkInterface tLinkInterface) {
         return this.transformLinkName.equals(tLinkInterface.getTransformLinkName());
     }
+
+    @Override
+    public int hashCode() {
+        return this.transformLinkName.hashCode();
+    }
 }

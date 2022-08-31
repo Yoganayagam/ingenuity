@@ -16,7 +16,7 @@ public interface TransformGraphInterface {
 
     public int setTransformGraphID(int ID);
 
-    public int getTransformID();
+    public int getTransformGraphID();
     public AbstractTransform addTransform(AbstractTransform transform);
 
     public AbstractTransform updateTransform(AbstractTransform oldtransform, AbstractTransform transform);

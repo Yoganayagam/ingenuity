@@ -1,8 +1,6 @@
 package com.ingenuity.flow.transform;
 
 import com.ingenuity.transform.*;
-import com.sun.xml.internal.ws.util.StringUtils;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,7 +35,7 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
     }
 
     @Override
-    public int getTransformID() {
+    public int getTransformGraphID() {
         return this.transformGraphID;
     }
 
@@ -55,8 +53,8 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
             mapTransformInterface.replace(transform.hashCode(), transform);
         } else { // changing transform-name is time consuming as per below logic
 
-            oldHashCode =   oldtransform.hashCode();
-            hashCode  =   transform.hashCode();
+            int oldHashCode =   oldtransform.hashCode();
+            int hashCode  =   transform.hashCode();
 
             if (mapTransformInterface.containsKey(oldHashCode)) {
                 mapTransformInterface.remove(oldHashCode);
@@ -128,12 +126,20 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         mapTransformLinkInterface.put(transformLink.hashCode(), transformLink);
         transformLinkKeys = mapTransformLinkInterface.keySet();
 
+        // update Forward links for transform
+        // mapTransformForwardLink
+        AbstractTransformLink[] transformLinks  =   mapTransformForwardLink.get(sourceTransform.hashCode());
+        //transformLinks.
+        // update backward links for transform
+        // mapTransformBackwardLink
+
         return transformLink;
     }
 
     @Override
-    public AbstractTransform removeLink(AbstractTransform sourceTransform, AbstractTransform targetTransform) {
-        //return null;
+    public AbstractTransformLink removeLink(AbstractTransform sourceTransform, AbstractTransform targetTransform) {
+        return new TransformLink(null, null);
+
     }
 
     @Override
