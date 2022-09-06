@@ -22,7 +22,7 @@ public interface TransformGraphInterface {
     public AbstractTransform updateTransform(AbstractTransform oldtransform, AbstractTransform transform);
     public AbstractTransform removeTransform(AbstractTransform transform);
     public AbstractTransformLink connectTransform(AbstractTransform sourceTransform, AbstractTransform targetTransform);
-    public AbstractTransformLink removeLink(AbstractTransform sourceTransform, AbstractTransform targetTransform);
+    public AbstractTransformLink removeLink(AbstractTransformLink tLink);
     public void addTransformGraphProperty(String pKey, String pValue);
     public ConcurrentHashMap<String, String> getTransformGraphProperties();
 

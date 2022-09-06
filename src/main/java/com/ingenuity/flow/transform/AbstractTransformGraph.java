@@ -8,8 +8,10 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
 
     //private List<TransformInterface> lstTransformInterface =   new ArrayList<TransformInterface>();
     private HashMap<Integer, AbstractTransform> mapTransformInterface = new HashMap<Integer, AbstractTransform>();
-    private HashMap<Integer, AbstractTransformLink[]> mapTransformForwardLink = new HashMap<Integer, AbstractTransformLink[]>();
-    private HashMap<Integer, AbstractTransformLink[]> mapTransformBackwardLink = new HashMap<Integer, AbstractTransformLink[]>();
+    private HashMap<Integer, AbstractTransform> mapSrcTransformInterface = new HashMap<Integer, AbstractTransform>();
+    private HashMap<Integer, AbstractTransform> mapTgtTransformInterface = new HashMap<Integer, AbstractTransform>();
+    private HashMap<Integer, TransformLinkSet> mapTransformForwardLink = new HashMap<Integer, TransformLinkSet>();
+    private HashMap<Integer, TransformLinkSet> mapTransformBackwardLink = new HashMap<Integer, TransformLinkSet>();
     private HashMap<Integer, AbstractTransformLink> mapTransformLinkInterface = new HashMap<Integer, AbstractTransformLink>();
 
     private ConcurrentHashMap<String, String> transformGraphProperties = new ConcurrentHashMap<String, String>();
@@ -42,6 +44,19 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
     @Override
     public AbstractTransform addTransform(AbstractTransform transform) {
         mapTransformInterface.put(transform.hashCode(),transform);
+
+        switch (transform.transformType()) {
+
+            case SOURCE:
+                mapSrcTransformInterface.put(transform.hashCode(),transform);
+                break;
+            case TARGET:
+                mapTgtTransformInterface.put(transform.hashCode(),transform);
+                break;
+            default:
+                // The transform is neither Source or Target. Do Nothing applies.
+        }
+
         this.transformKeys = mapTransformInterface.keySet();
         return transform;
     }
@@ -51,6 +66,18 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
 
         if ( oldtransform.getTransformName().equals(transform.getTransformName())) {
             mapTransformInterface.replace(transform.hashCode(), transform);
+
+            switch (transform.transformType()) {
+
+                case SOURCE:
+                    mapSrcTransformInterface.replace(transform.hashCode(), transform);
+                    break;
+                case TARGET:
+                    mapTgtTransformInterface.replace(transform.hashCode(), transform);
+                    break;
+
+            }
+
         } else { // changing transform-name is time consuming as per below logic
 
             int oldHashCode =   oldtransform.hashCode();
@@ -59,13 +86,27 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
             if (mapTransformInterface.containsKey(oldHashCode)) {
                 mapTransformInterface.remove(oldHashCode);
                 mapTransformInterface.put(hashCode, transform);
+
+                switch (transform.transformType()) {
+
+                    case SOURCE:
+                        mapSrcTransformInterface.remove(oldHashCode);
+                        mapSrcTransformInterface.put(hashCode, transform);
+                        break;
+                    case TARGET:
+                        mapTgtTransformInterface.remove(oldHashCode);
+                        mapTgtTransformInterface.put(hashCode, transform);
+                        break;
+
+                }
+
             }
 
             this.transformKeys = mapTransformInterface.keySet();
 
             if (mapTransformForwardLink.containsKey(oldHashCode)) {
-                AbstractTransformLink[] links = mapTransformForwardLink.get(oldHashCode);
-                for (AbstractTransformLink link : links) {
+                TransformLinkSet<TransformLink> links = mapTransformForwardLink.get(oldHashCode);
+                for (TransformLink link : links) {
                     mapTransformLinkInterface.remove(link.hashCode());
                     link.setTransformLinkName(link.getTransformLinkName().replaceFirst(oldtransform.getTransformName(), transform.getTransformName()));
                     mapTransformLinkInterface.put(link.hashCode(), link);
@@ -75,8 +116,8 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
             }
 
             if (mapTransformBackwardLink.containsKey(oldHashCode)) {
-                AbstractTransformLink[] links = mapTransformBackwardLink.get(oldHashCode);
-                for (AbstractTransformLink link : links) {
+                TransformLinkSet<TransformLink> links = mapTransformBackwardLink.get(oldHashCode);
+                for (TransformLink link : links) {
                     mapTransformLinkInterface.remove(link.hashCode());
                     link.setTransformLinkName(link.getTransformLinkName().replaceAll(oldtransform.getTransformName().concat("$"), transform.getTransformName()));
                     mapTransformLinkInterface.put(link.hashCode(), link);
@@ -84,6 +125,8 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
                 mapTransformBackwardLink.put(hashCode, links);
                 mapTransformBackwardLink.remove(oldHashCode);
             }
+
+            this.transformLinkKeys = mapTransformLinkInterface.keySet();
         }
         return transform;
     }
@@ -93,28 +136,43 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         AbstractTransform outVal = null;
         int srcHashCode = transform.hashCode();
 
+        //remove transform links
         if(mapTransformForwardLink.containsKey(srcHashCode)){
-
-            AbstractTransformLink[] links = mapTransformForwardLink.get(srcHashCode);
-            for(AbstractTransformLink link:links){
+            TransformLinkSet<TransformLink> links = mapTransformForwardLink.get(srcHashCode);
+            for(TransformLink link:links){
                 mapTransformLinkInterface.remove(link.hashCode());
             }
             mapTransformForwardLink.remove(srcHashCode);
         }
 
         if(mapTransformBackwardLink.containsKey(srcHashCode)){
-
-            AbstractTransformLink[] links = mapTransformBackwardLink.get(srcHashCode);
-            for(AbstractTransformLink link:links){
+            TransformLinkSet<TransformLink> links = mapTransformBackwardLink.get(srcHashCode);
+            for(TransformLink link:links){
                 mapTransformLinkInterface.remove(link.hashCode());
             }
             mapTransformBackwardLink.remove(srcHashCode);
         }
 
+        this.transformLinkKeys  =   mapTransformLinkInterface.keySet();
+
         if( this.transformKeys.contains(srcHashCode) )
             outVal = mapTransformInterface.get(srcHashCode);
 
-        // remove transform links as well
+        // remove transform
+        mapTransformInterface.remove(srcHashCode);
+
+        switch (transform.transformType()) {
+
+            case SOURCE:
+                mapSrcTransformInterface.remove(srcHashCode);
+                break;
+            case TARGET:
+                mapTgtTransformInterface.remove(srcHashCode);
+                break;
+
+        }
+
+        this.transformKeys  =   mapTransformInterface.keySet();
 
         return outVal;
     }
@@ -127,18 +185,34 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         transformLinkKeys = mapTransformLinkInterface.keySet();
 
         // update Forward links for transform
-        // mapTransformForwardLink
-        AbstractTransformLink[] transformLinks  =   mapTransformForwardLink.get(sourceTransform.hashCode());
-        //transformLinks.
+        TransformLinkSet<TransformLink> transformLinks1  =   mapTransformForwardLink.get(sourceTransform.hashCode());
+        transformLinks1.add(transformLink);
+
         // update backward links for transform
-        // mapTransformBackwardLink
+        TransformLinkSet<TransformLink> transformLinks2  =   mapTransformBackwardLink.get(sourceTransform.hashCode());
+        transformLinks2.add(transformLink);
 
         return transformLink;
     }
 
     @Override
-    public AbstractTransformLink removeLink(AbstractTransform sourceTransform, AbstractTransform targetTransform) {
-        return new TransformLink(null, null);
+    public AbstractTransformLink removeLink(AbstractTransformLink tLink) {
+        //return new TransformLink(null, null);
+
+        int tLinkhasCode = tLink.hashCode();
+
+        // update Forward links for transform
+        TransformLinkSet<TransformLink> transformLinks1  =   mapTransformForwardLink.get(tLink.getSourceTransformHashCode());
+        transformLinks1.remove(tLink);
+
+        // update backward links for transform
+        TransformLinkSet<TransformLink> transformLinks2  =   mapTransformBackwardLink.get(tLink.getTargetTransformHashCode());
+        transformLinks2.remove(tLink);
+        mapTransformLinkInterface.remove(tLinkhasCode);
+
+        this.transformLinkKeys  =   mapTransformLinkInterface.keySet();
+
+        return tLink;
 
     }
 
@@ -149,6 +223,42 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
 
     @Override
     public ConcurrentHashMap<String, String> getTransformGraphProperties() {
+
         return this.transformGraphProperties;
     }
+
+    public void createGraphStructure(){
+
+        ArrayList<AbstractTransform> lstTransforms   =   (ArrayList<AbstractTransform>) mapSrcTransformInterface.values();
+
+        for(AbstractTransform tform: lstTransforms){
+            System.out.print("Source:"+tform.getTransformID());
+
+            this.crawlLinks(tform, new ArrayList<Integer>(){{add(0);}});
+
+        }
+
+
+    }
+
+    public void crawlLinks(AbstractTransform transform, List<Integer> indents){
+
+        if (this.mapTransformForwardLink.containsKey(transform.hashCode())){
+            TransformLinkSet<TransformLink> transformLinks = mapTransformForwardLink.get(transform.hashCode());
+
+            for(TransformLink tLink : transformLinks){
+
+                for(int cnt : indents) System.out.print(' ');
+                System.out.print( " --> " + mapTransformInterface.get(tLink.getTargetTransformHashCode()).getTransformID());
+
+                indents.add(0);
+                this.crawlLinks(mapTransformInterface.get(tLink.getTargetTransformHashCode()), indents);
+            }
+            System.out.println("######################################################");
+
+        }
+
+    }
+
+
 }
