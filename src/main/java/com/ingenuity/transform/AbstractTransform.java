@@ -181,12 +181,12 @@ public abstract class AbstractTransform implements TransformInterface, Transform
     }
 
     @Override
-    public TransformType transformType(TransformType type) {
+    public TransformType setTransformType(TransformType type) {
         return this.transformType = type;
     }
 
     @Override
-    public TransformType transformType() {
+    public TransformType getTransformType() {
         return this.transformType;
     }
 

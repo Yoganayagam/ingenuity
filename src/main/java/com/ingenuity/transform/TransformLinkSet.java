@@ -7,6 +7,17 @@ public class TransformLinkSet<E> extends AbstractSet<TransformLink> {
     private Set<TransformLink> tLinkSet = new HashSet<TransformLink>();
 
     @Override
+    public boolean add(TransformLink tl){
+
+        if (!tLinkSet.contains(tl)){
+            tLinkSet.add(tl);
+            return true;
+        } else
+            return false;
+
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this)
             return true;

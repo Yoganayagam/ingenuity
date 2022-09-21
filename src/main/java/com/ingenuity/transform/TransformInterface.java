@@ -4,9 +4,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public interface TransformInterface {
 
-    public TransformType transformType(TransformType type);
+    public TransformType setTransformType(TransformType type);
 
-    public TransformType transformType();
+    public TransformType getTransformType();
     public void addTransformProperty(String pKey, String pValue);
 
     public ConcurrentHashMap<String, String> getTransformProperties();

@@ -43,15 +43,18 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
 
     @Override
     public AbstractTransform addTransform(AbstractTransform transform) {
-        mapTransformInterface.put(transform.hashCode(),transform);
 
-        switch (transform.transformType()) {
+        int hCode   =   transform.hashCode();
+
+        mapTransformInterface.put(hCode,transform);
+
+        switch (transform.getTransformType()) {
 
             case SOURCE:
-                mapSrcTransformInterface.put(transform.hashCode(),transform);
+                mapSrcTransformInterface.put(hCode,transform);
                 break;
             case TARGET:
-                mapTgtTransformInterface.put(transform.hashCode(),transform);
+                mapTgtTransformInterface.put(hCode,transform);
                 break;
             default:
                 // The transform is neither Source or Target. Do Nothing applies.
@@ -67,7 +70,7 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         if ( oldtransform.getTransformName().equals(transform.getTransformName())) {
             mapTransformInterface.replace(transform.hashCode(), transform);
 
-            switch (transform.transformType()) {
+            switch (transform.getTransformType()) {
 
                 case SOURCE:
                     mapSrcTransformInterface.replace(transform.hashCode(), transform);
@@ -87,7 +90,7 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
                 mapTransformInterface.remove(oldHashCode);
                 mapTransformInterface.put(hashCode, transform);
 
-                switch (transform.transformType()) {
+                switch (transform.getTransformType()) {
 
                     case SOURCE:
                         mapSrcTransformInterface.remove(oldHashCode);
@@ -161,7 +164,7 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         // remove transform
         mapTransformInterface.remove(srcHashCode);
 
-        switch (transform.transformType()) {
+        switch (transform.getTransformType()) {
 
             case SOURCE:
                 mapSrcTransformInterface.remove(srcHashCode);
@@ -185,12 +188,19 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         transformLinkKeys = mapTransformLinkInterface.keySet();
 
         // update Forward links for transform
-        TransformLinkSet<TransformLink> transformLinks1  =   mapTransformForwardLink.get(sourceTransform.hashCode());
-        transformLinks1.add(transformLink);
+        if (mapTransformForwardLink.containsKey(sourceTransform.hashCode())){
+            TransformLinkSet<TransformLink> transformLinks1  =   mapTransformForwardLink.get(sourceTransform.hashCode());
+            transformLinks1.add(transformLink);
+        } else
+            mapTransformForwardLink.put(sourceTransform.hashCode(), new TransformLinkSet(){ {add(transformLink);} });
+
 
         // update backward links for transform
-        TransformLinkSet<TransformLink> transformLinks2  =   mapTransformBackwardLink.get(sourceTransform.hashCode());
-        transformLinks2.add(transformLink);
+        if (mapTransformBackwardLink.containsKey(targetTransform.hashCode())) {
+            TransformLinkSet<TransformLink> transformLinks2 = mapTransformBackwardLink.get(targetTransform.hashCode());
+            transformLinks2.add(transformLink);
+        } else
+            mapTransformBackwardLink.put(targetTransform.hashCode(), new TransformLinkSet(){ {add(transformLink);} });
 
         return transformLink;
     }
@@ -229,12 +239,15 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
 
     public void createGraphStructure(){
 
-        ArrayList<AbstractTransform> lstTransforms   =   (ArrayList<AbstractTransform>) mapSrcTransformInterface.values();
+        //ArrayList<AbstractTransform> lstTransforms   =   (ArrayList<AbstractTransform>) ();
 
-        for(AbstractTransform tform: lstTransforms){
-            System.out.print("Source:"+tform.getTransformID());
+        for(AbstractTransform tform: mapSrcTransformInterface.values()){
+            System.out.print(tform.getTransformID());
 
-            this.crawlLinks(tform, new ArrayList<Integer>(){{add(0);}});
+            //this.crawlLinks(tform, new ArrayList<Integer>(){{add(0);}});
+            this.crawlLinks(tform, new ArrayList<Integer>());
+            System.out.println();
+            System.out.println("######################################################");
 
         }
 
@@ -244,17 +257,30 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
     public void crawlLinks(AbstractTransform transform, List<Integer> indents){
 
         if (this.mapTransformForwardLink.containsKey(transform.hashCode())){
+            indents.add(0);indents.add(0);indents.add(0);
             TransformLinkSet<TransformLink> transformLinks = mapTransformForwardLink.get(transform.hashCode());
+
+            boolean prv = true;
+            boolean curr = false;
 
             for(TransformLink tLink : transformLinks){
 
-                for(int cnt : indents) System.out.print(' ');
-                System.out.print( " --> " + mapTransformInterface.get(tLink.getTargetTransformHashCode()).getTransformID());
+                curr = ! curr;
 
-                indents.add(0);
+                if(curr != prv){
+                    System.out.println();
+                    System.out.println("------------------------------");
+                    for(int cnt : indents) System.out.print(' ');
+
+                }
+
+                System.out.print( "-->" + mapTransformInterface.get(tLink.getTargetTransformHashCode()).getTransformID());
+
                 this.crawlLinks(mapTransformInterface.get(tLink.getTargetTransformHashCode()), indents);
+
+                prv = curr;
             }
-            System.out.println("######################################################");
+            indents.remove(0);indents.remove(0);indents.remove(0);
 
         }
 
