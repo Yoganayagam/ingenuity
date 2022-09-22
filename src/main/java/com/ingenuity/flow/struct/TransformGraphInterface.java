@@ -1,11 +1,8 @@
-package com.ingenuity.flow.transform;
+package com.ingenuity.flow.struct;
 
 import com.ingenuity.transform.AbstractTransform;
 import com.ingenuity.transform.AbstractTransformLink;
-import com.ingenuity.transform.TransformInterface;
-import com.ingenuity.transform.TransformLinkInterface;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public interface TransformGraphInterface {

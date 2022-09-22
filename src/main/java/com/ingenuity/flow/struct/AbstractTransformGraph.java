@@ -1,4 +1,4 @@
-package com.ingenuity.flow.transform;
+package com.ingenuity.flow.struct;
 
 import com.ingenuity.transform.*;
 import java.util.*;
