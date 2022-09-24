@@ -246,6 +246,18 @@ public abstract class AbstractTransformGraph implements TransformGraphInterface 
         return this.transformGraphProperties;
     }
 
+    public HashMap<Integer, TransformLinkSet> getForwardLinks(){
+        return this.mapTransformForwardLink;
+    }
+
+    public HashMap<Integer, TransformLinkSet> getBackwardLinks(){
+        return this.mapTransformBackwardLink;
+    }
+
+    public HashMap<Integer, AbstractTransform> getTransformMap(){
+        return this.mapTransformInterface;
+    }
+
     public void createGraphStructure(){
 
         //ArrayList<AbstractTransform> lstTransforms   =   (ArrayList<AbstractTransform>) ();
