@@ -4,6 +4,8 @@ import com.ingenuity.CommonPropertyLiterals;
 import com.ingenuity.flow.struct.TransformGraph;
 import com.ingenuity.transform.AbstractTransform;
 import com.ingenuity.transform.Transform;
+import com.ingenuity.transform.TransformLink;
+import com.ingenuity.transform.TransformLinkSet;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +15,8 @@ public class AbstractStream implements StreamInterface{
 
     private TransformGraph  transformGraph  =   new TransformGraph();
     private HashMap<Integer, BlockingQueue<?>[]>  bQueueMap   =   new HashMap<Integer, BlockingQueue<?>[]>();
+    private HashMap<Integer, HashMap<Integer,BlockingQueue<?>[]>> bUpstreamQueueMap = new HashMap<Integer, HashMap<Integer,BlockingQueue<?>[]>>();
+    private HashMap<Integer, HashMap<Integer,BlockingQueue<?>[]>> bDownstreamQueueMap = new HashMap<Integer, HashMap<Integer,BlockingQueue<?>[]>>();
     //private HashMap<Integer, Integer> transformHashMap  =   new HashMap<Integer, Integer>();
 
 
@@ -22,18 +26,27 @@ public class AbstractStream implements StreamInterface{
         this.transformGraph =   tGraph;
 
         HashMap<Integer, AbstractTransform> tmap   =  this.transformGraph.getTransformMap();
+        HashMap<Integer, TransformLinkSet> hMap_Upstream_links = this.transformGraph.getBackwardLinks();
+        HashMap<Integer, TransformLinkSet> hMap_Downstream_links = this.transformGraph.getForwardLinks();
+
         Iterator<Integer> keys  =   tmap.keySet().iterator();
 
         while(keys.hasNext()){
-            AbstractTransform tform = tmap.get(keys.next());
+            int hCode       =   keys.next();
+            TransformLinkSet<TransformLink> linkSetBackward = hMap_Upstream_links.get(hCode);
+            TransformLinkSet<TransformLink> linkSetForward = hMap_Downstream_links.get(hCode);
+
+            AbstractTransform tform = tmap.get(hCode);
             if (tform.getTransformProperties().get(CommonPropertyLiterals.transform_threads) != null) {
                 int threads = Integer.parseInt(tform.getTransformProperties().get(CommonPropertyLiterals.transform_threads));
                 setTransformQueue(tform.hashCode(), new BlockingQueue<?>[threads]);
             } else
                 setTransformQueue(tform.hashCode(), new BlockingQueue<?>[1]);
 
-        }
+            this.setUpstreamQueues(hCode, linkSetBackward);
+            this.setDownstreamQueues(hCode, linkSetForward);
 
+        }
 
     }
 
@@ -54,12 +67,35 @@ public class AbstractStream implements StreamInterface{
 
     @Override
     public HashMap<Integer, BlockingQueue<?>[]> getUpstreamQueue(int tHashcode) {
-
-        return null;
+        return this.bUpstreamQueueMap.get(tHashcode);
     }
 
     @Override
     public HashMap<Integer, BlockingQueue<?>[]> getDownstreamQueue(int tHashcode) {
-        return null;
+        return this.bDownstreamQueueMap.get(tHashcode);
+    }
+
+    @Override
+    public boolean setUpstreamQueues(int tHashcode, TransformLinkSet<TransformLink> linkSet) {
+        HashMap<Integer, BlockingQueue<?>[]> hMapQueue   =   new HashMap<Integer, BlockingQueue<?>[]>();
+        for (TransformLink link : linkSet){
+            Integer hCode = link.getSourceTransformHashCode();
+            BlockingQueue<?>[] bQueue = bQueueMap.get(hCode);
+            hMapQueue.put(hCode, bQueue);
+        }
+        bUpstreamQueueMap.put(tHashcode, hMapQueue);
+        return true;
+    }
+
+    @Override
+    public boolean setDownstreamQueues(int tHashcode, TransformLinkSet<TransformLink> linkSet) {
+        HashMap<Integer, BlockingQueue<?>[]> hMapQueue   =   new HashMap<Integer, BlockingQueue<?>[]>();
+        for (TransformLink link : linkSet){
+            Integer hCode = link.getSourceTransformHashCode();
+            BlockingQueue<?>[] bQueue = bQueueMap.get(hCode);
+            hMapQueue.put(hCode, bQueue);
+        }
+        bDownstreamQueueMap.put(tHashcode, hMapQueue);
+        return true;
     }
 }
