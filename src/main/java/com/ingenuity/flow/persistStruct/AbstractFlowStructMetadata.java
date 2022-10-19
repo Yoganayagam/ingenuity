@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ingenuity.flow.struct.TransformGraph;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -60,7 +62,35 @@ public abstract class AbstractFlowStructMetadata implements FlowStructMetadataIn
 
     @Override
     public boolean addHashtoMetadata() {
-        return false;
+
+        MessageDigest md    = null;
+        try {
+            md    =   MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            return false;
+        }
+
+        if (this.rootONode.path("header").has("hash")){
+            this.rootONode.remove("hash");
+        }
+        byte[] byteVal  =   null;
+        try {
+            byteVal =   this.objMapper.writeValueAsBytes(this.rootONode);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] hashByte =   md.digest(byteVal);
+        StringBuffer hexStringBuffer    =   new StringBuffer();
+
+        for(byte ele : byteVal){
+            hexStringBuffer.append(String.format("%02X",ele));
+        }
+
+        JsonNode headerJNode    =   this.rootONode.get("header");
+        ObjectNode hdrONode =   ((ObjectNode)headerJNode).put("hash",hexStringBuffer.toString());
+        this.rootONode.set("header", (JsonNode) hdrONode);
+
+        return true;
     }
 
     @Override
