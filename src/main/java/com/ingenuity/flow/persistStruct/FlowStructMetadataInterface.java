@@ -9,5 +9,7 @@ public interface FlowStructMetadataInterface {
     public boolean addStreamStructure();
     public boolean addStructProperties();
 
+    public byte[] getJSONString();
+
 
 }
